@@ -1,3 +1,6 @@
+本项目基于 https://github.com/wrqccc/FJSP-DRL 做修改，计算改为多目标调度，目前仍在修改中...
+
+
 # FJSP-DRL
 
 This repository is the official implementation of the paper “[Flexible Job Shop Scheduling via Dual Attention Network Based Reinforcement Learning](https://doi.org/10.1109/TNNLS.2023.3306421)”. *IEEE Transactions on Neural Networks and Learning Systems*, 2023.
