@@ -56,7 +56,7 @@ def test_greedy_strategy(data_set, model_path, seed):
             # 贪婪选择动作
             action = greedy_select_action(pi)
             # 执行动作并获取新状态
-            state, reward, done = env.step(actions=action.cpu().numpy())
+            state, reward, machine_load, done = env.step(actions=action.cpu().numpy())
             # 如果调度完成，退出循环
             if done:
                 break
@@ -111,7 +111,7 @@ def test_sampling_strategy(data_set, model_path, sample_times, seed):
                                        fea_pairs=state.fea_pairs_tensor)  # [100, J, M]
 
                 action_envs, _ = sample_action(pi)
-                state, _, done = env.step(action_envs.cpu().numpy())
+                state, _, _, done = env.step(action_envs.cpu().numpy())
                 if done.all():
                     break
 

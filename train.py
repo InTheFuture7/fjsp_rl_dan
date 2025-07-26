@@ -284,7 +284,7 @@ class Trainer:
                                         fea_pairs=state.fea_pairs_tensor)  # [sz_b, J, M]
 
             action = greedy_select_action(pi)
-            state, _, done = self.vali_env.step(action.cpu().numpy())
+            state, _, _, done = self.vali_env.step(action.cpu().numpy())
 
             if done.all():
                 break
@@ -315,7 +315,7 @@ class Trainer:
                                         fea_pairs=state.fea_pairs_tensor[batch_idx])  # [sz_b, J, M]
 
             action = greedy_select_action(pi)
-            state, _, done = self.vali_env.step(action.cpu().numpy())
+            state, _, _, done = self.vali_env.step(action.cpu().numpy())
 
             if done.all():
                 break

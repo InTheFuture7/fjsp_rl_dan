@@ -292,6 +292,9 @@ class FJSPEnvForSameOpNums:
         self.true_candidate_free_time = np.zeros((self.number_of_envs, self.number_of_jobs))
         self.true_mch_free_time = np.zeros((self.number_of_envs, self.number_of_machines))
 
+        # 机器工作时间累计器，用于正确计算机器总负载
+        self.machine_total_work_time = np.zeros((self.number_of_envs, self.number_of_machines))
+
         self.candidate = np.copy(self.job_first_op_id)
 
         # mask[i,j] : whether the jth job of ith env is scheduled (have no unscheduled operations)
@@ -352,6 +355,10 @@ class FJSPEnvForSameOpNums:
         # TODO:更新 self.true_mch_free_time，如何更新？
         self.true_mch_free_time[self.env_idxs, chosen_mch] = self.true_op_ct[
             self.env_idxs, chosen_op]
+
+        # 累加机器工作时间，用于正确计算机器总负载
+        self.machine_total_work_time[self.env_idxs, chosen_mch] += self.true_op_pt[
+            self.env_idxs, chosen_op, chosen_mch]
 
         self.current_makespan = np.maximum(self.current_makespan, self.true_op_ct[
             self.env_idxs, chosen_op])
@@ -475,16 +482,15 @@ class FJSPEnvForSameOpNums:
 
 
     def calculate_machine_total_load(self):
-        # TODO:计算有问题！！！
-        # self.true_mch_free_time 表示每个调度环境中机器的最晚完工时间
-        print("self.true_mch_free_time.shape", self.true_mch_free_time.shape)
-        print('true_mch_free_time', self.true_mch_free_time)
-        # 计算每台机器的工作时间
-        machine_work_time = np.max(self.true_mch_free_time, axis=1) - np.min(self.true_mch_free_time, axis=1)
-        
-        # 计算所有机器的总运行时间
-        machine_total_load = np.sum(machine_work_time, axis=1)
-        
+        """
+            计算机器总负载（所有机器的工作时间总和）
+
+            Returns:
+                machine_total_load: 每个环境中所有机器的工作时间总和 [E]
+        """
+        # 计算每个环境中所有机器的工作时间总和
+        machine_total_load = np.sum(self.machine_total_work_time, axis=1)
+
         return machine_total_load
 
 

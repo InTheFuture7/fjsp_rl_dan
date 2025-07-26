@@ -204,6 +204,9 @@ class FJSPEnvForVariousOpNums:
         self.true_candidate_free_time = np.zeros((self.number_of_envs, self.number_of_jobs))
         self.true_mch_free_time = np.zeros((self.number_of_envs, self.number_of_machines))
 
+        # 机器工作时间累计器，用于正确计算机器总负载
+        self.machine_total_work_time = np.zeros((self.number_of_envs, self.number_of_machines))
+
         self.candidate = np.copy(self.job_first_op_id)
 
         self.unscheduled_op_nums = np.copy(self.env_number_of_ops)
@@ -262,6 +265,10 @@ class FJSPEnvForVariousOpNums:
             self.incomplete_env_idx, chosen_op]
         self.true_mch_free_time[self.incomplete_env_idx, chosen_mch] = self.true_op_ct[
             self.incomplete_env_idx, chosen_op]
+
+        # 累加机器工作时间，用于正确计算机器总负载
+        self.machine_total_work_time[self.incomplete_env_idx, chosen_mch] += self.true_op_pt[
+            self.incomplete_env_idx, chosen_op, chosen_mch]
 
         self.current_makespan[self.incomplete_env_idx] = np.maximum(self.current_makespan[self.incomplete_env_idx],
                                                                     self.true_op_ct[
@@ -347,18 +354,35 @@ class FJSPEnvForVariousOpNums:
 
         self.construct_pair_features()
 
-        reward = self.max_endTime - np.max(self.op_ct_lb, axis=1)
+        # 计算机器负载
+        machine_load = self.calculate_machine_total_load()
+
+        # 计算奖励
+        makespan_reward = self.max_endTime - np.max(self.op_ct_lb, axis=1)
         self.max_endTime = np.max(self.op_ct_lb, axis=1)
 
+        # 更新状态
         self.state.update(self.fea_j, self.op_mask, self.fea_m, self.mch_mask,
                           self.dynamic_pair_mask, self.comp_idx, self.candidate,
                           self.fea_pairs)
         self.done_flag = self.done()
 
-        return self.state, np.array(reward), self.done_flag
+        return self.state, np.array(makespan_reward), machine_load, self.done_flag
 
     def done(self):
         return self.step_count >= self.env_number_of_ops
+
+    def calculate_machine_total_load(self):
+        """
+            计算机器总负载（所有机器的工作时间总和）
+
+            Returns:
+                machine_total_load: 每个环境中所有机器的工作时间总和 [E]
+        """
+        # 计算每个环境中所有机器的工作时间总和
+        machine_total_load = np.sum(self.machine_total_work_time, axis=1)
+
+        return machine_total_load
 
     def construct_op_features(self):
 
